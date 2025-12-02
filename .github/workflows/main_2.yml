@@ -1,0 +1,43 @@
+---
+# Repository level variables are defined in the repository settings under "Settings" > "Variables" > "Repository variables".
+# These variables can be accessed in the workflow using the `vars` context.
+# In this example, we are using repository level variables to set the Python version and a command to run tests.
+# Make sure to create the following repository variables before running this workflow:
+# 1. PYTHON_VERSION with value 3.12
+# 2. PYTHONCMD with value "python -m unittest discover -s tests" or "pytest test –cov=app –cov-report=xml" based on your test framework
+# upgraded code from Demo8 : to upload the xml report to repository artifacts
+name: Save the .XML File
+on: workflow_dispatch
+jobs:
+  job_python_istallation_and_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup python ${{ vars.PYTHON_VERSION }} # repository level variable, optopnal comment
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ vars.PYTHON_VERSION }}  # repository level variable
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Set PYTHONPATH                          # set path to execute python commands/ project code
+        run: echo "PYTHONPATH=$GITHUB_WORKSPACE" >> $GITHUB_ENV
+
+      - name: Run tests
+        env:
+          mycmd: ${{ vars.PYTHONCMD }}  
+        run: $mycmd
+              
+      - name: Print Workflow Name
+        run: echo "Github Workflow name is $GITHUB_WORKFLOW"
+
+      - name: upload the XML report to github repo 
+        uses: actions/upload-artifact@v4
+        with: 
+         name: upload coverage.xml file
+         path: /home/runner/work/GitHubActions_Demo8_Repository-Variables/GitHubActions_Demo8_Repository-Variables/coverage.xml
